@@ -9,17 +9,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Node
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+        uses: actions/checkout@v2
+        uses: actions/setup-node@v2
         with:
           node-version: '14'
           check-latest: true
 
       - name: Install Dependencies
-      - run: yarn install
+        run: yarn install
 
       - name: Build React Project
-      - run: CI=false yarn build
+        run: CI=false yarn build
 
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
