@@ -2,9 +2,8 @@ import { ChangeEvent, useRef, useState } from 'react';
 import {
   blobToClipboard,
   getDownloadableBlob,
-  getDownloadableDataURI,
-  getImageDimensions,
   randomString,
+  readFile,
 } from '../../helpers';
 import { useDebouncerState } from '../../hooks/useDebouncerState';
 import { useLoading } from '../../hooks/useLoading';
@@ -43,9 +42,7 @@ export function ImageWrapper() {
     const files = e.target.files;
     if (files?.length) {
       const [file] = files;
-      const fileURL = URL.createObjectURL(file);
-      const { width, height } = await getImageDimensions(fileURL);
-      console.log({ width, height });
+      const fileURL = await readFile(file);
       resetValues();
       setImageSource(fileURL);
     }
@@ -65,12 +62,14 @@ export function ImageWrapper() {
 
   const handleDownload = async () => {
     setLoading('download', true);
-    const dataUrl = await getDownloadableDataURI(imageRef.current);
-    if (!dataUrl) return;
+    const blob = await getDownloadableBlob(imageRef.current);
+    if (!blob) return;
+
+    const filename = `image-${randomString()}.png`;
 
     const link = document.createElement('a');
-    link.download = `image-${randomString()}.png`;
-    link.href = dataUrl;
+    link.download = filename;
+    link.href = URL.createObjectURL(blob);
     link.click();
     setLoading('download', false);
   };

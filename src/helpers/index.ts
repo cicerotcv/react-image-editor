@@ -30,6 +30,13 @@ export function readFile(file: File) {
   });
 }
 
+export function createFile(content: Blob, filename: string) {
+  return new File([content], filename, {
+    lastModified: new Date().getTime(),
+    type: 'image/png',
+  });
+}
+
 export const createImage = (url: string) =>
   new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
