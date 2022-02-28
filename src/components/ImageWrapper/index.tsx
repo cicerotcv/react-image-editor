@@ -1,9 +1,13 @@
-import DomToImage from 'dom-to-image';
-import { useCallback } from 'react';
-import { ChangeEvent, useRef, useState } from 'react';
-import { randomString } from '../../helpers';
+import { ChangeEvent, useCallback, useRef, useState } from 'react';
+import {
+  copyToClipboard,
+  domToBlob,
+  domToDataUrl,
+  randomString,
+} from '../../helpers';
 import { useDebouncerState } from '../../hooks/useDebouncerState';
-import { Button } from '../Button';
+import { useLoading } from '../../hooks/useLoading';
+import { LoadingButton } from '../Button';
 import { Card, ControllersCard, Stack } from '../Containers';
 import { Slider } from '../Slider';
 import {
@@ -31,6 +35,10 @@ export function ImageWrapper() {
   const [brightness, setBrightness] = useDebouncerState(DV.BRIGHTNESS, 10);
   const [blur, setBlur] = useDebouncerState(DV.BLUR, 10);
   const [saturation, setSaturation] = useDebouncerState(DV.SATURATION, 10);
+  const [loading, setLoading] = useLoading({
+    clipboard: false,
+    download: false,
+  });
 
   function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
@@ -54,14 +62,26 @@ export function ImageWrapper() {
     inputRef.current.click();
   }, []);
 
-  const handleDownload = useCallback(() => {
-    if (!imageRef.current) return;
-    DomToImage.toPng(imageRef.current).then((dataUrl) => {
-      const link = document.createElement('a');
-      link.download = `image-${randomString()}.png`;
-      link.href = dataUrl;
-      link.click();
-    });
+  const handleDownload = useCallback(async () => {
+    setLoading('download', true);
+    const dataUrl = await domToDataUrl(imageRef.current);
+    setLoading('download', false);
+    if (!dataUrl) return;
+
+    const link = document.createElement('a');
+    link.download = `image-${randomString()}.png`;
+    link.href = dataUrl;
+    link.click();
+  }, []);
+
+  const writeClipboard = useCallback(async () => {
+    setLoading('clipboard', true);
+    const imageBlob = await domToBlob(imageRef.current);
+    setLoading('clipboard', false);
+    if (!imageBlob) return;
+
+    const clipboardItem = new ClipboardItem({ 'image/png': imageBlob });
+    copyToClipboard(clipboardItem);
   }, []);
 
   return (
@@ -81,12 +101,21 @@ export function ImageWrapper() {
         <Stack>
           <ControllersCard>
             <ButtonGroup>
-              <Button onClick={handleDownload}>
-                <i className="fa fa-download" /> Download Image
-              </Button>
-              <Button onClick={resetValues}>
-                <i className="fa fa-undo" /> Reset Values
-              </Button>
+              <LoadingButton
+                onClick={handleDownload}
+                icon="fa fa-download"
+                isLoading={loading.download}>
+                Download Image
+              </LoadingButton>
+              <LoadingButton onClick={resetValues} icon="fa fa-undo">
+                Reset Values
+              </LoadingButton>
+              <LoadingButton
+                onClick={writeClipboard}
+                icon="fas fa-copy"
+                isLoading={loading.clipboard}>
+                Copy to Clipboard
+              </LoadingButton>
             </ButtonGroup>
             <ControllersContainer>
               <Slider
