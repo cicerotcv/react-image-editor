@@ -14,6 +14,11 @@ export const Card = styled.div`
 
   align-self: center;
   justify-self: center;
+
+  @media screen and (max-width: 1080px) {
+    padding: 0.5rem;
+    max-width: 100vw;
+  }
 `;
 
 export const ControllersCard = styled(Card)`
@@ -39,5 +44,7 @@ export const Stack = styled.div`
 
   @media screen and (max-width: 1080px) {
     grid-auto-flow: row;
+    max-width: 100vw;
+    margin: 0;
   }
 `;

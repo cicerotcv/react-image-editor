@@ -1,8 +1,9 @@
-import { ChangeEvent, useCallback, useRef, useState } from 'react';
+import { ChangeEvent, useRef, useState } from 'react';
 import {
-  copyToClipboard,
-  domToBlob,
-  domToDataUrl,
+  blobToClipboard,
+  getDownloadableBlob,
+  getDownloadableDataURI,
+  getImageDimensions,
   randomString,
 } from '../../helpers';
 import { useDebouncerState } from '../../hooks/useDebouncerState';
@@ -28,9 +29,7 @@ const DV = {
 export function ImageWrapper() {
   const inputRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-
   const [source, setImageSource] = useState<string>('');
-
   const [contrast, setContrast] = useDebouncerState(DV.CONTRAST, 10);
   const [brightness, setBrightness] = useDebouncerState(DV.BRIGHTNESS, 10);
   const [blur, setBlur] = useDebouncerState(DV.BLUR, 10);
@@ -40,49 +39,50 @@ export function ImageWrapper() {
     download: false,
   });
 
-  function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files?.length) {
-      const file = files[0];
+      const [file] = files;
       const fileURL = URL.createObjectURL(file);
+      const { width, height } = await getImageDimensions(fileURL);
+      console.log({ width, height });
       resetValues();
       setImageSource(fileURL);
     }
-  }
+  };
 
-  function resetValues() {
+  const resetValues = () => {
     setContrast(DV.CONTRAST);
     setBrightness(DV.BRIGHTNESS);
     setBlur(DV.BLUR);
     setSaturation(DV.SATURATION);
-  }
+  };
 
-  const transferClick = useCallback(() => {
+  const transferClick = () => {
     if (!inputRef.current) return;
     inputRef.current.click();
-  }, []);
+  };
 
-  const handleDownload = useCallback(async () => {
+  const handleDownload = async () => {
     setLoading('download', true);
-    const dataUrl = await domToDataUrl(imageRef.current);
-    setLoading('download', false);
+    const dataUrl = await getDownloadableDataURI(imageRef.current);
     if (!dataUrl) return;
 
     const link = document.createElement('a');
     link.download = `image-${randomString()}.png`;
     link.href = dataUrl;
     link.click();
-  }, []);
+    setLoading('download', false);
+  };
 
-  const writeClipboard = useCallback(async () => {
+  const writeClipboard = async () => {
     setLoading('clipboard', true);
-    const imageBlob = await domToBlob(imageRef.current);
-    setLoading('clipboard', false);
+    const imageBlob = await getDownloadableBlob(imageRef.current);
     if (!imageBlob) return;
 
-    const clipboardItem = new ClipboardItem({ 'image/png': imageBlob });
-    copyToClipboard(clipboardItem);
-  }, []);
+    await blobToClipboard(imageBlob);
+    setLoading('clipboard', false);
+  };
 
   return (
     <>
