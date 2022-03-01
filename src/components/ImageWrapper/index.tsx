@@ -2,6 +2,7 @@ import { ChangeEvent, useRef, useState } from 'react';
 import {
   blobToClipboard,
   getDownloadableBlob,
+  getDownloadableDataURI,
   randomString,
   readFile,
 } from '../../helpers';
@@ -40,12 +41,11 @@ export function ImageWrapper() {
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files?.length) {
-      const [file] = files;
-      const fileURL = await readFile(file);
-      resetValues();
-      setImageSource(fileURL);
-    }
+    if (!files?.length) return;
+    const [file] = files;
+    const fileURL = await readFile(file);
+    resetValues();
+    setImageSource(fileURL);
   };
 
   const resetValues = () => {
@@ -62,25 +62,33 @@ export function ImageWrapper() {
 
   const handleDownload = async () => {
     setLoading('download', true);
-    const blob = await getDownloadableBlob(imageRef.current);
-    if (!blob) return;
-
-    const filename = `image-${randomString()}.png`;
-
-    const link = document.createElement('a');
-    link.download = filename;
-    link.href = URL.createObjectURL(blob);
-    link.click();
-    setLoading('download', false);
+    const filters = { blur, contrast, brightness, saturation };
+    getDownloadableDataURI(imageRef.current, filters)
+      .then((dataURI) => {
+        if (!dataURI) return;
+        const filename = `${randomString()}.png`;
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = dataURI;
+        link.click();
+        (URL || webkitURL).revokeObjectURL(dataURI);
+      })
+      .finally(() => {
+        setLoading('download', false);
+      });
   };
 
   const writeClipboard = async () => {
     setLoading('clipboard', true);
-    const imageBlob = await getDownloadableBlob(imageRef.current);
-    if (!imageBlob) return;
-
-    await blobToClipboard(imageBlob);
-    setLoading('clipboard', false);
+    const filters = { blur, contrast, brightness, saturation };
+    getDownloadableBlob(imageRef.current, filters)
+      .then(async (imageBlob) => {
+        if (!imageBlob) return;
+        await blobToClipboard(imageBlob);
+      })
+      .finally(() => {
+        setLoading('clipboard', false);
+      });
   };
 
   return (

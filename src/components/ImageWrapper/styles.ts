@@ -1,6 +1,6 @@
 import { shade } from 'polished';
 import styled from 'styled-components';
-import { normalize, percentual } from '../../helpers';
+import { makeFilter } from '../../helpers';
 
 export const ImageContainer = styled.div`
   display: flex;
@@ -12,20 +12,20 @@ export const ImageContainer = styled.div`
 `;
 
 interface ImageProps {
-  contrast?: number;
-  brightness?: number;
-  blur?: number;
-  grayscale?: number;
-  saturation?: number;
+  contrast: number;
+  brightness: number;
+  blur: number;
+  saturation: number;
 }
 
 export const Image = styled.img.attrs((props: ImageProps) => ({
   style: {
-    filter: `brightness(${normalize(props.brightness)})
-             contrast(${normalize(props.contrast)})
-             blur(${props.blur}px)
-             grayscale(${percentual(props.grayscale)})
-             saturate(${props.saturation}%)`,
+    filter: makeFilter({
+      blur: props.blur,
+      brightness: props.brightness,
+      contrast: props.contrast,
+      saturation: props.saturation,
+    }),
   },
 }))<ImageProps>`
   max-height: 80vh;

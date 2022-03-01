@@ -1,9 +1,24 @@
+interface IFilters {
+  blur: number;
+  brightness: number;
+  contrast: number;
+  saturation: number;
+}
+
 export function percentual(number = 0) {
   return number / 100;
 }
 
 export function normalize(number = 0) {
   return 1 + percentual(number);
+}
+
+export function makeFilter(filters: IFilters) {
+  const blur = filters.blur;
+  const brightness = normalize(filters.brightness);
+  const contrast = normalize(filters.contrast);
+  const saturation = filters.saturation;
+  return `brightness(${brightness}) contrast(${contrast}) blur(${blur}px) saturate(${saturation}%)`;
 }
 
 export function randomString() {
@@ -42,7 +57,7 @@ export const createImage = (url: string) =>
     const image = new Image();
     image.addEventListener('load', () => resolve(image));
     image.addEventListener('error', (error) => reject(error));
-    image.setAttribute('crossOrigin', '*'); // needed to avoid cross-origin issues on CodeSandbox
+    image.setAttribute('crossOrigin', '*'); // needed to avoid cross-origin issues
     image.src = url;
   });
 
@@ -59,7 +74,10 @@ export async function getImageDimensions(dataURI: string) {
   });
 }
 
-async function canvasFromImage(imgElement: HTMLImageElement | null) {
+async function canvasFromImage(
+  imgElement: HTMLImageElement | null,
+  filters: IFilters
+) {
   if (!imgElement) return;
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -74,28 +92,37 @@ async function canvasFromImage(imgElement: HTMLImageElement | null) {
   canvas.width = width;
   canvas.height = height;
 
-  ctx.filter = imgElement.style.filter;
+  const rescaledBlur = Math.floor((filters.blur * width) / imgElement.width);
+
+  const canvasFilter = makeFilter({ ...filters, blur: rescaledBlur });
+
+  ctx.filter = canvasFilter;
   ctx.drawImage(image, 0, 0);
 
   return canvas;
 }
 
 export async function getDownloadableDataURI(
-  imgElement: HTMLImageElement | null
+  imgElement: HTMLImageElement | null,
+  filters: IFilters
 ): Promise<string | undefined> {
-  const canvas = (await canvasFromImage(imgElement)) as HTMLCanvasElement;
+  const canvas = (await canvasFromImage(
+    imgElement,
+    filters
+  )) as HTMLCanvasElement;
 
-  return new Promise((resolve) => {
-    canvas.toBlob((file) => {
-      resolve(URL.createObjectURL(file as Blob));
-    }, 'image/png');
-  });
+  return canvas.toDataURL('image/png');
 }
 
 export async function getDownloadableBlob(
-  imgElement: HTMLImageElement | null
+  imgElement: HTMLImageElement | null,
+  filters: IFilters
 ): Promise<Blob> {
-  const canvas = (await canvasFromImage(imgElement)) as HTMLCanvasElement;
+  const canvas = (await canvasFromImage(
+    imgElement,
+    filters
+  )) as HTMLCanvasElement;
+
   return new Promise((resolve) => {
     canvas.toBlob((blob) => {
       resolve(blob as Blob);

@@ -37,7 +37,7 @@ export function Slider(props: ISliderProps) {
         min={props.minValue}
         max={props.maxValue}
         step={1}
-        color="secondary"
+        color="primary"
         onChange={handleChange}
       />
 
