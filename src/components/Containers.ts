@@ -8,7 +8,7 @@ export const Card = styled.div`
   padding: 1rem;
   border-radius: 0.5rem;
   max-width: 90vw;
-  margin: 0.5rem auto;
+  /* margin: 1rem auto; */
 
   width: 100%;
 
@@ -18,6 +18,7 @@ export const Card = styled.div`
   @media screen and (max-width: 1080px) {
     padding: 0.5rem;
     max-width: 100vw;
+    border-radius: 0;
   }
 `;
 
@@ -46,5 +47,17 @@ export const Stack = styled.div`
     grid-auto-flow: row;
     max-width: 100vw;
     margin: 0;
+  }
+`;
+
+export const PageWrapper = styled.main`
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+
+  & > :not(:first-child) {
+    margin-top: 1rem;
   }
 `;

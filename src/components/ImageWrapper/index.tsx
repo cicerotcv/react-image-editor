@@ -9,7 +9,7 @@ import {
 import { useDebouncerState } from '../../hooks/useDebouncerState';
 import { useLoading } from '../../hooks/useLoading';
 import { LoadingButton } from '../Button';
-import { Card, ControllersCard, Stack } from '../Containers';
+import { Card, ControllersCard, PageWrapper, Stack } from '../Containers';
 import { Slider } from '../Slider';
 import {
   ButtonGroup,
@@ -91,7 +91,7 @@ export function ImageWrapper() {
   };
 
   return (
-    <>
+    <PageWrapper>
       <Card>
         <ImageInput onClick={transferClick}>
           <p>Insert an image</p>
@@ -174,6 +174,6 @@ export function ImageWrapper() {
           </Card>
         </Stack>
       )}
-    </>
+    </PageWrapper>
   );
 }
