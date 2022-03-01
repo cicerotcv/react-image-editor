@@ -71,7 +71,6 @@ export function ImageWrapper() {
         link.download = filename;
         link.href = dataURI;
         link.click();
-        (URL || webkitURL).revokeObjectURL(dataURI);
       })
       .finally(() => {
         setLoading('download', false);
